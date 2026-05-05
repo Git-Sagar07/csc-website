@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel — CSC Seva Kendra</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { padding-bottom: 0; }
+    .admin-page { display: none; }
+    .admin-page.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-big">🏛️</div>
+      <h2>Admin Panel</h2>
+      <p class="devanagari">शिवकृपा कॉम्प्युटर & मल्टीसर्विसेस CSC Seva Kendra — Secure Login</p>
+    </div>
+    <form class="contact-form" id="loginForm" novalidate autocomplete="off">
+      <div class="form-group">
+        <label class="form-label" for="adminUser">Username</label>
+        <input type="text" id="adminUser" name="username" class="form-control"
+               placeholder="admin username"
+               autocomplete="username"
+               spellcheck="false"
+               required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="adminPass">Password</label>
+        <div style="position:relative">
+          <input type="password" id="adminPass" name="password" class="form-control"
+                 placeholder="••••••••"
+                 autocomplete="current-password"
+                 required>
+          <button type="button" id="togglePass"
+                  style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-light)">
+            👁️
+          </button>
+        </div>
+      </div>
+      <div id="loginError" class="form-error" style="display:none"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+        🔐 Login करा
+      </button>
+      <div id="lockoutMsg" style="display:none;text-align:center;margin-top:10px;font-size:0.82rem;color:#CC0000;font-weight:600"></div>
+    </form>
+    <p style="margin-top:14px;text-align:center;font-size:0.78rem;color:var(--text-light)">
+      🔒 Secured with rate-limiting & CSRF protection
+    </p>
+  </div>
+</div>
+
+<!-- ═══ ADMIN DASHBOARD ═══ -->
+<div id="adminDashboard" style="display:none">
+
+  <!-- Top bar -->
+  <div style="background:var(--blue);color:white;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="nav-logo" style="width:34px;height:34px;font-size:0.9rem">CSC</div>
+      <span style="font-weight:800;font-size:0.95rem">Admin Panel</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span id="adminWelcome" style="font-size:0.82rem;opacity:0.8"></span>
+      <a href="index.html" target="_blank" class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;padding:6px 12px;font-size:0.8rem">🌐 Site</a>
+      <button id="logoutBtn" class="btn btn-sm" style="background:rgba(255,100,100,0.25);color:white;padding:6px 12px;font-size:0.8rem">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+      <h3>Navigation</h3>
+      <div class="admin-nav-item active" data-page="dashboard">📊 Dashboard</div>
+      <div class="admin-nav-item" data-page="messages">✉️ Messages <span id="msgBadge" style="background:var(--saffron);color:white;border-radius:99px;padding:1px 7px;font-size:0.7rem;margin-left:auto"></span></div>
+      <div class="admin-nav-item" data-page="notices">📢 Notices</div>
+      <div class="admin-nav-item" data-page="gallery">📷 Gallery</div>
+      <div class="admin-nav-item" data-page="settings">⚙️ Settings</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+
+      <!-- ── Dashboard ── -->
+      <div class="admin-page active" id="page-dashboard">
+        <h2 style="font-size:1.3rem;font-weight:800;color:var(--blue);margin-bottom:18px">📊 Dashboard</h2>
+        <div class="stat-cards">
+          <div class="stat-card"><span class="s-num" id="stat-msg">—</span><span class="s-lbl">Messages</span></div>
+          <div class="stat-card"><span class="s-num" id="stat-notices">—</span><span class="s-lbl">Notices</span></div>
+          <div class="stat-card"><span class="s-num" id="stat-unread">—</span><span class="s-lbl">Unread</span></div>
+          <div class="stat-card"><span class="s-num">✅</span><span class="s-lbl">Site Live</span></div>
+        </div>
+        <div class="admin-card">
+          <h3>⚡ Quick Actions</h3>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="showPage('notices')">📢 New Notice</button>
+            <button class="btn btn-secondary btn-sm" onclick="showPage('messages')">✉️ View Messages</button>
+            <a href="index.html" target="_blank" class="btn btn-sm" style="background:var(--green-lt);color:var(--green);border:1.5px solid var(--green)">🌐 View Site</a>
+          </div>
+        </div>
+        <div class="admin-card">
+          <h3>🔔 Recent Messages</h3>
+          <div id="recentMsgs"><div style="color:var(--text-light);font-size:0.9rem">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── Messages ── -->
+      <div class="admin-page" id="page-messages">
+        <h2 style="font-size:1.3rem;font-weight:800;color:var(--blue);margin-bottom:18px">✉️ Contact Messages</h2>
+        <div class="admin-card">
+          <div style="overflow-x:auto">
+            <table class="admin-table" id="msgsTable">
+              <thead>
+                <tr>
+                  <th>नाव</th><th>फोन</th><th>सेवा</th><th>संदेश</th><th>तारीख</th><th>Status</th><th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="msgsBody">
+                <tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:20px">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Notices ── -->
+      <div class="admin-page" id="page-notices">
+        <h2 style="font-size:1.3rem;font-weight:800;color:var(--blue);margin-bottom:18px">📢 Notice Board</h2>
+        <!-- Add Notice Form -->
+        <div class="admin-card">
+          <h3>➕ नवीन सूचना जोडा</h3>
+          <form id="noticeForm" class="contact-form" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">Title (English)</label>
+              <input type="text" name="title" class="form-control" placeholder="Notice title in English" required maxlength="200">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">Title (मराठी)</label>
+              <input type="text" name="title_mr" class="form-control devanagari" placeholder="मराठी सूचना शीर्षक" required maxlength="200">
+            </div>
+            <div class="form-group" style="grid-column:1/-1">
+              <label class="form-label">Body / Details</label>
+              <textarea name="body" class="form-control devanagari" rows="2" placeholder="तपशील..." maxlength="500"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select name="type" class="form-control">
+                <option value="normal">Normal</option>
+                <option value="new">New 🟢</option>
+                <option value="urgent">Urgent 🟠</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" name="date" class="form-control" required>
+            </div>
+            <div style="grid-column:1/-1">
+              <button type="submit" class="btn btn-primary">📢 सूचना जोडा</button>
+            </div>
+          </form>
+        </div>
+        <!-- Notices List -->
+        <div class="admin-card">
+          <h3>📋 सर्व सूचना</h3>
+          <div id="noticesAdmin"><div style="color:var(--text-light)">Loading...</div></div>
+        </div>
+      </div>
+
+      <!-- ── Gallery ── -->
+      <div class="admin-page" id="page-gallery">
+        <h2 style="font-size:1.3rem;font-weight:800;color:var(--blue);margin-bottom:18px">📷 Gallery Management</h2>
+        <div class="admin-card">
+          <h3>📤 फोटो अपलोड करा</h3>
+          <form id="galleryForm" enctype="multipart/form-data">
+            <div class="form-group">
+              <label class="form-label">Caption (मराठी)</label>
+              <input type="text" name="caption" class="form-control devanagari" placeholder="फोटोचे वर्णन...">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Photo Upload</label>
+              <input type="file" name="photo" class="form-control" accept="image/jpeg,image/png,image/webp" style="padding:8px">
+              <small style="color:var(--text-light);font-size:0.78rem">Max 2MB. JPG/PNG/WebP only.</small>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">📤 Upload करा</button>
+          </form>
+        </div>
+        <div class="admin-card">
+          <h3>🖼️ Uploaded Photos</h3>
+          <div id="galleryAdmin" style="color:var(--text-light)">Loading...</div>
+        </div>
+      </div>
+
+      <!-- ── Settings ── -->
+      <div class="admin-page" id="page-settings">
+        <h2 style="font-size:1.3rem;font-weight:800;color:var(--blue);margin-bottom:18px">⚙️ Site Settings</h2>
+        <div class="admin-card">
+          <h3>🔐 Password बदला</h3>
+          <form id="changePassForm" class="contact-form" style="max-width:380px">
+            <div class="form-group">
+              <label class="form-label">Current Password</label>
+              <input type="password" name="currentPass" class="form-control" autocomplete="current-password" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input type="password" name="newPass" class="form-control" autocomplete="new-password" required minlength="8">
+              <small style="color:var(--text-light);font-size:0.78rem">Min 8 characters. Use letters + numbers + symbols.</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm New Password</label>
+              <input type="password" name="confirmPass" class="form-control" autocomplete="new-password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm">🔐 Password बदला</button>
+          </form>
+        </div>
+        <div class="admin-card">
+          <h3>ℹ️ Security Info</h3>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:0.88rem;color:var(--text-mid)">
+            <div>🔒 JWT session expires: <strong>8 hours</strong></div>
+            <div>🚫 Login brute-force protection: <strong>5 attempts → 15 min lockout</strong></div>
+            <div>🛡️ CSRF token: <strong>Active on all forms</strong></div>
+            <div>📦 Rate limiting: <strong>100 req/15min per IP</strong></div>
+            <div>🔐 Passwords: <strong>bcrypt hashed (cost 12)</strong></div>
+            <div>🌐 HTTPS: <strong>Enforce via Cloudflare / Nginx</strong></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /admin-main -->
+  </div><!-- /admin-layout -->
+</div><!-- /adminDashboard -->
+
+<script>
+/* ════════════════════════════════════
+   ADMIN PANEL JAVASCRIPT
+════════════════════════════════════ */
+const API = "http://localhost:3000/api";  // change to prod
+let authToken = null;
+let loginAttempts = parseInt(sessionStorage.getItem("loginAttempts") || "0");
+let lockoutUntil  = parseInt(sessionStorage.getItem("lockoutUntil")  || "0");
+
+// ── Sanitize helper (XSS prevention in admin rendering) ──
+function esc(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#x27;");
+}
+
+// ── Toggle password visibility ──
+document.getElementById("togglePass").addEventListener("click", () => {
+  const p = document.getElementById("adminPass");
+  p.type = p.type === "password" ? "text" : "password";
+});
+
+// ── Login form ──
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const errEl  = document.getElementById("loginError");
+  const lockEl = document.getElementById("lockoutMsg");
+  const btn    = document.getElementById("loginBtn");
+
+  // Check lockout
+  if (Date.now() < lockoutUntil) {
+    const secs = Math.ceil((lockoutUntil - Date.now()) / 1000);
+    lockEl.style.display = "block";
+    lockEl.textContent = `⏳ ${secs} seconds नंतर पुन्हा प्रयत्न करा.`;
+    return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Logging in...';
+  btn.disabled = true;
+  errEl.style.display = "none";
+
+  const username = document.getElementById("adminUser").value.trim();
+  const password = document.getElementById("adminPass").value;
+
+  try {
+    const res = await fetch(`${API}/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+
+    if (res.ok && data.token) {
+      authToken = data.token;
+      sessionStorage.setItem("cscAdminToken", authToken);
+      sessionStorage.removeItem("loginAttempts");
+      sessionStorage.removeItem("lockoutUntil");
+      loginAttempts = 0;
+      showDashboard(data.username || username);
+    } else {
+      loginAttempts++;
+      sessionStorage.setItem("loginAttempts", loginAttempts);
+      if (loginAttempts >= 5) {
+        const until = Date.now() + 15 * 60 * 1000;
+        sessionStorage.setItem("lockoutUntil", until);
+        lockoutUntil = until;
+        lockEl.style.display = "block";
+        lockEl.textContent = "🚫 15 minutes साठी लॉक. खूप चुकीच्या प्रयत्नांमुळे.";
+      }
+      errEl.style.display = "block";
+      errEl.textContent = data.message || "❌ चुकीचे username किंवा password.";
+    }
+  } catch {
+    errEl.style.display = "block";
+    errEl.textContent = "⚠️ Server शी संपर्क होऊ शकला नाही.";
+  } finally {
+    btn.innerHTML = "🔐 Login करा";
+    btn.disabled = false;
+  }
+});
+
+// ── Show Dashboard ──
+function showDashboard(username) {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("adminDashboard").style.display = "block";
+  document.getElementById("adminWelcome").textContent = `👤 ${esc(username)}`;
+  loadDashboardData();
+}
+
+// ── Check stored token on load ──
+window.addEventListener("load", () => {
+  const stored = sessionStorage.getItem("cscAdminToken");
+  if (stored) {
+    authToken = stored;
+    showDashboard("Admin");
+  }
+  // Set today's date in notice form
+  const dateField = document.querySelector("#noticeForm [name='date']");
+  if (dateField) dateField.value = new Date().toISOString().split("T")[0];
+});
+
+// ── Logout ──
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  try { await authFetch(`${API}/admin/logout`, { method: "POST" }); } catch {}
+  authToken = null;
+  sessionStorage.removeItem("cscAdminToken");
+  document.getElementById("adminDashboard").style.display = "none";
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("adminPass").value = "";
+});
+
+// ── Auth fetch wrapper ──
+async function authFetch(url, opts = {}) {
+  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+  const res = await fetch(url, { ...opts, headers, credentials: "include" });
+  if (res.status === 401) {
+    authToken = null;
+    sessionStorage.removeItem("cscAdminToken");
+    document.getElementById("adminDashboard").style.display = "none";
+    document.getElementById("loginScreen").style.display = "flex";
+    throw new Error("Unauthorized");
+  }
+  return res;
+}
+
+// ── Page Navigation ──
+function showPage(page) {
+  document.querySelectorAll(".admin-page").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".admin-nav-item").forEach(n => n.classList.remove("active"));
+  document.getElementById(`page-${page}`).classList.add("active");
+  document.querySelector(`[data-page="${page}"]`).classList.add("active");
+
+  if (page === "messages")  loadMessages();
+  if (page === "notices")   loadNoticesAdmin();
+  if (page === "gallery")   loadGalleryAdmin();
+  if (page === "dashboard") loadDashboardData();
+}
+document.querySelectorAll(".admin-nav-item").forEach(item => {
+  item.addEventListener("click", () => showPage(item.dataset.page));
+});
+
+// ── Load Dashboard Stats ──
+async function loadDashboardData() {
+  try {
+    const [msgRes, notRes] = await Promise.all([
+      authFetch(`${API}/admin/messages?limit=5`),
+      authFetch(`${API}/notices?limit=10`),
+    ]);
+    const msgs = await msgRes.json();
+    const nots = await notRes.json();
+
+    const total  = msgs.total  || (msgs.data || []).length;
+    const unread = msgs.unread || (msgs.data || []).filter(m => m.status === "new").length;
+    document.getElementById("stat-msg").textContent     = total;
+    document.getElementById("stat-notices").textContent = (nots.data || []).length;
+    document.getElementById("stat-unread").textContent  = unread;
+    if (unread > 0) document.getElementById("msgBadge").textContent = unread;
+
+    const tbody = document.getElementById("recentMsgs");
+    const data  = (msgs.data || []).slice(0, 4);
+    tbody.innerHTML = data.length ? data.map(m => `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div>
+          <strong style="font-size:0.9rem">${esc(m.name)}</strong>
+          <span style="color:var(--text-light);font-size:0.8rem;margin-left:8px">${esc(m.phone)}</span>
+          <p style="font-size:0.82rem;color:var(--text-mid);margin-top:2px">${esc(m.message?.substring(0,80))}…</p>
+        </div>
+        <span class="status-badge status-${esc(m.status || 'new')}">${esc(m.status || 'new')}</span>
+      </div>`).join("") : "<p style='color:var(--text-light)'>No messages yet.</p>";
+  } catch {}
+}
+
+// ── Load Messages ──
+async function loadMessages() {
+  const tbody = document.getElementById("msgsBody");
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:16px">Loading...</td></tr>`;
+  try {
+    const res  = await authFetch(`${API}/admin/messages`);
+    const data = await res.json();
+    const rows = (data.data || []);
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:16px">कोणतेही संदेश नाहीत</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(m => `
+      <tr>
+        <td style="font-weight:700">${esc(m.name)}</td>
+        <td><a href="tel:${esc(m.phone)}" style="color:var(--blue)">${esc(m.phone)}</a></td>
+        <td>${esc(m.service || "—")}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(m.message)}">${esc(m.message)}</td>
+        <td style="white-space:nowrap;color:var(--text-light);font-size:0.8rem">${new Date(m.created_at).toLocaleDateString("mr-IN")}</td>
+        <td><span class="status-badge status-${esc(m.status || 'new')}">${esc(m.status || 'new')}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn-icon" title="Mark Read" onclick="markRead(${m.id})">✅</button>
+            <button class="btn-icon" title="WhatsApp" onclick="window.open('https://wa.me/${esc(m.phone?.replace(/\D/g,''))}')">💬</button>
+            <button class="btn-icon" title="Delete" onclick="deleteMsg(${m.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`).join("");
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#CC0000;text-align:center;padding:16px">Error loading messages</td></tr>`;
+  }
+}
+
+async function markRead(id) {
+  try {
+    await authFetch(`${API}/admin/messages/${id}/read`, { method: "PATCH" });
+    loadMessages();
+  } catch {}
+}
+async function deleteMsg(id) {
+  if (!confirm("हा संदेश कायमचा हटवायचा आहे?")) return;
+  try {
+    await authFetch(`${API}/admin/messages/${id}`, { method: "DELETE" });
+    loadMessages();
+  } catch {}
+}
+
+// ── Notices Admin ──
+async function loadNoticesAdmin() {
+  const container = document.getElementById("noticesAdmin");
+  try {
+    const res  = await authFetch(`${API}/notices`);
+    const data = await res.json();
+    const rows = (data.data || []);
+    container.innerHTML = rows.length ? `
+      <table class="admin-table">
+        <thead><tr><th>Title (मराठी)</th><th>Type</th><th>Date</th><th>Action</th></tr></thead>
+        <tbody>${rows.map(n => `
+          <tr>
+            <td style="font-weight:600">${esc(n.title_mr || n.title)}</td>
+            <td><span class="status-badge ${n.type === 'urgent' ? 'status-new' : 'status-active'}">${esc(n.type)}</span></td>
+            <td style="font-size:0.8rem;color:var(--text-light)">${new Date(n.date).toLocaleDateString("mr-IN")}</td>
+            <td><button class="btn-icon" onclick="deleteNotice(${n.id})">🗑️</button></td>
+          </tr>`).join("")}
+        </tbody>
+      </table>` : "<p style='color:var(--text-light)'>कोणत्याही सूचना नाहीत.</p>";
+  } catch { container.innerHTML = "<p style='color:#CC0000'>Error loading notices.</p>"; }
+}
+
+document.getElementById("noticeForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd  = new FormData(e.target);
+  const btn = e.target.querySelector("button[type=submit]");
+  btn.disabled = true;
+  try {
+    const res = await authFetch(`${API}/admin/notices`, {
+      method: "POST",
+      body: JSON.stringify(Object.fromEntries(fd)),
+    });
+    if (res.ok) { e.target.reset(); loadNoticesAdmin(); alert("✅ सूचना जोडली!"); }
+    else { const d = await res.json(); alert("Error: " + (d.message || "Failed")); }
+  } catch { alert("Server error."); }
+  finally { btn.disabled = false; }
+});
+
+async function deleteNotice(id) {
+  if (!confirm("ही सूचना हटवायची आहे?")) return;
+  try {
+    await authFetch(`${API}/admin/notices/${id}`, { method: "DELETE" });
+    loadNoticesAdmin();
+  } catch {}
+}
+
+// ── Gallery Admin ──
+async function loadGalleryAdmin() {
+  const c = document.getElementById("galleryAdmin");
+  try {
+    const res  = await authFetch(`${API}/gallery`);
+    const data = await res.json();
+    c.innerHTML = (data.data || []).length
+      ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px">
+          ${(data.data || []).map(g => `
+          <div style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--off-white)">
+            <img src="/uploads/${esc(g.filename)}" alt="${esc(g.caption)}" style="width:100%;height:100%;object-fit:cover">
+            <button onclick="deletePhoto(${g.id})"
+              style="position:absolute;top:4px;right:4px;background:rgba(255,0,0,0.7);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.7rem">
+              ✕
+            </button>
+          </div>`).join("")}
+        </div>`
+      : "<p style='color:var(--text-light)'>कोणतेही फोटो नाहीत.</p>";
+  } catch { c.innerHTML = "<p style='color:#CC0000'>Error loading gallery.</p>"; }
+}
+
+document.getElementById("galleryForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd  = new FormData(e.target);
+  const btn = e.target.querySelector("button[type=submit]");
+  btn.disabled = true;
+  try {
+    const headers = {};
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+    const res = await fetch(`${API}/admin/gallery`, {
+      method: "POST", body: fd, headers, credentials: "include",
+    });
+    if (res.ok) { e.target.reset(); loadGalleryAdmin(); alert("✅ फोटो अपलोड झाला!"); }
+    else { const d = await res.json(); alert("Error: " + (d.message || "Failed")); }
+  } catch { alert("Upload error."); }
+  finally { btn.disabled = false; }
+});
+
+async function deletePhoto(id) {
+  if (!confirm("हा फोटो कायमचा हटवायचा?")) return;
+  try {
+    await authFetch(`${API}/admin/gallery/${id}`, { method: "DELETE" });
+    loadGalleryAdmin();
+  } catch {}
+}
+
+// ── Change Password ──
+document.getElementById("changePassForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  if (fd.get("newPass") !== fd.get("confirmPass")) {
+    alert("❌ नवीन passwords जुळत नाहीत."); return;
+  }
+  try {
+    const res = await authFetch(`${API}/admin/change-password`, {
+      method: "POST",
+      body: JSON.stringify({ currentPassword: fd.get("currentPass"), newPassword: fd.get("newPass") }),
+    });
+    const data = await res.json();
+    if (res.ok) { e.target.reset(); alert("✅ Password बदलला! पुन्हा login करा."); document.getElementById("logoutBtn").click(); }
+    else alert("❌ " + (data.message || "Failed"));
+  } catch { alert("Server error."); }
+});
+</script>
+</body>
+</html>

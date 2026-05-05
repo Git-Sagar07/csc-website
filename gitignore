@@ -1,0 +1,41 @@
+# ═══════════════════════════════
+# .gitignore — SECURITY CRITICAL
+# ═══════════════════════════════
+
+# Environment (NEVER commit!)
+.env
+.env.*
+!.env.example
+
+# Database (contains real user data)
+backend/db/*.db
+backend/db/*.db-shm
+backend/db/*.db-wal
+
+# Uploaded user photos
+backend/uploads/
+!backend/uploads/.gitkeep
+
+# Logs (may contain sensitive info)
+backend/logs/
+*.log
+
+# Node modules
+node_modules/
+backend/node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+dist/
+build/
+.cache/
